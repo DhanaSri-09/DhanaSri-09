@@ -1,4 +1,4 @@
-// CRUDS operations using binary tree
+// To perform CRUDS operation on binary tree
 
 #include <stdio.h>
 #include <stdlib.h>
