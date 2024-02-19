@@ -1,0 +1,34 @@
+#include <stdio.h>
+#include "prime.c"
+
+#define DATA_COUNT 15
+#define LENGTH 20
+ 
+ void test_prime()
+ {
+ 	int is_successful = 1;
+ 	char input_value[DATA_COUNT][LENGTH] = {"-9", "19", "56", "d", "sri", "99dhana", "nine9", "-69", "01", "-gha0","10y89", "h-7@", "0"};
+ 	int is_prime_status[DATA_COUNT];
+ 	int counter = 0;
+ 	for (counter = 0; counter < DATA_COUNT; counter++)
+ 	{
+ 		is_prime_status[counter] = is_prime(input_value[counter]);
+ 	}
+ 	for (counter = 0; counter< DATA_COUNT; counter++)
+ 	{
+ 		if (is_prime_status == 0)
+ 		{
+ 			is_successful = 0;
+ 			printf("Failed(%s)\n", input_value[counter]);
+ 		}
+ 	}
+ 	if (is_successful == 1)
+ 	{
+ 		printf("All test cases are passed.\n");
+ 	}
+ }
+
+ void main()
+ {
+ 	test_prime();
+ }
