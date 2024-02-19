@@ -1,0 +1,356 @@
+// CRUDS operations using binary tree
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define OPERATION_LENGTH 10
+#define ID_LENGTH 10
+#define NAME_LENGTH 100
+#define DATA_FILE "novelty_books.dat"
+#define PRINT_RECORD_STATUS(book_id, operation) printf("Book with id- %s is %s.\n", book_id, operation) 
+
+struct book_details 
+{
+    char book_id[ID_LENGTH];
+    char book_name[NAME_LENGTH];
+    float book_price;
+};
+
+struct book_node 
+{
+    struct book_node *left_node;
+    struct book_details book_record;
+    struct book_node *right_node;
+};
+
+FILE *fp_books;
+struct book_node *root_node;
+char *operation;
+
+void load_binary_tree() 
+{
+    root_node = NULL;
+    struct book_details book_record;
+    struct book_node **current_node_ptr, *new_node, *current_node;
+    fp_books = fopen(DATA_FILE, "rb");
+    while (fread(&book_record, sizeof(struct book_details), 1, fp_books)) 
+    {
+        new_node = (struct book_node*)malloc(sizeof(struct book_node));
+        new_node->book_record = book_record;
+        new_node->left_node = NULL;
+        new_node->right_node = NULL;
+
+        current_node_ptr = &root_node;
+
+        while (*current_node_ptr != NULL) 
+        {
+            current_node = *current_node_ptr;
+            if (strcmp(current_node->book_record.book_id, book_record.book_id) < 0) 
+            {
+                current_node_ptr = &current_node->right_node;
+            } 
+            else 
+            {
+                current_node_ptr = &current_node->left_node;
+            }
+        }
+        *current_node_ptr = new_node;
+    }
+    fclose(fp_books);
+}
+
+char* get_random_generated_id() 
+{
+    struct book_details book;
+    char random_book_id[ID_LENGTH]; 
+    srand(time(NULL));
+    int Counter;
+    for (Counter = 0; Counter < ID_LENGTH; ++Counter) 
+    {
+        random_book_id[Counter] = '0' + rand() % 10;
+    }
+    random_book_id[ID_LENGTH - 1] = '\0';
+    strcpy(book.book_id, random_book_id);
+    return book.book_id;
+}
+
+struct book_details get_book_details() 
+{
+    struct book_details book;
+    strcpy(book.book_id, get_random_generated_id());
+    printf("Enter book name: ");
+    scanf(" %[^\n]s", book.book_name);
+    printf("Enter book price: ");
+    scanf("%f", &book.book_price);
+    return book;
+}
+
+void save_book_details_helper(struct book_node *node, FILE *fp) 
+{
+    if (node != NULL) 
+    {
+        save_book_details_helper(node->left_node, fp);
+        save_book_details_helper(node->right_node, fp);
+        fwrite(&(node->book_record), sizeof(struct book_details), 1, fp);
+    }
+}
+
+void save_book_details() 
+{
+    fp_books = fopen(DATA_FILE, "wb");
+    if (fp_books != NULL) 
+    {
+        save_book_details_helper(root_node, fp_books);
+        fclose(fp_books); 
+    }
+}
+
+
+void add_book_details() 
+{
+    struct book_node* new_node = (struct book_node*)malloc(sizeof(struct book_node));
+    struct book_details book = get_book_details();
+    new_node->book_record = book;
+    new_node->left_node = NULL;
+    new_node->right_node = NULL;
+
+    if (root_node == NULL) 
+    {
+        root_node = new_node;
+    }
+    else 
+    {
+        struct book_node* parent_node = NULL;
+        struct book_node* current_book_node = root_node;
+        while (current_book_node != NULL) 
+        {
+            parent_node = current_book_node;
+            if (strcmp(new_node->book_record.book_id, current_book_node->book_record.book_id) < 0) 
+            {
+                current_book_node = current_book_node->left_node;
+            } 
+            else 
+            {
+                current_book_node = current_book_node->right_node;
+            }
+        }
+        if (strcmp(new_node->book_record.book_id, parent_node->book_record.book_id) < 0) 
+        {
+            parent_node->left_node = new_node;
+        } 
+        else 
+        {
+            parent_node->right_node = new_node;
+        }
+    }
+    operation = "added";
+    PRINT_RECORD_STATUS(book.book_id, operation);
+    save_book_details();
+}
+
+void show_all_books_helper(struct book_node *node) 
+{
+    if (node != NULL) 
+    {
+        show_all_books_helper(node->left_node);
+        printf("Book ID: %s\n", node->book_record.book_id);
+        printf("Book Name: %s\n", node->book_record.book_name);
+        printf("Book Price: %.2f\n", node->book_record.book_price);
+        printf("-----------------------------\n");
+        show_all_books_helper(node->right_node);
+    }
+}
+
+void show_all_books() 
+{
+    printf("Listing all books:\n");
+    show_all_books_helper(root_node);
+}
+
+struct book_node* get_matching_node(struct book_node* node, char* book_id) 
+{
+    
+    if (node == NULL || strcmp(node->book_record.book_id, book_id) == 0) 
+    {
+        return node;
+    }
+    if (strcmp(book_id, node->book_record.book_id) < 0) 
+    {
+        return get_matching_node(node->left_node, book_id);
+    }
+    else 
+    {
+        return get_matching_node(node->right_node, book_id);
+    }
+}
+
+char *get_book_id(char *operation)
+{
+    char *Book_id = (char *)malloc(ID_LENGTH);
+    printf("Enter book id to %s: ", operation);
+    scanf("%s", Book_id);
+    return Book_id;
+}
+
+
+void search_book(char* book_id) 
+{
+    struct book_node* result = get_matching_node(root_node, book_id);
+    if (result != NULL) 
+    {
+        printf("Book ID: %s\n", result->book_record.book_id);
+        printf("Book Name: %s\n", result->book_record.book_name);
+        printf("Book Price: %.2f\n", result->book_record.book_price);
+    } 
+    else 
+    {
+        PRINT_RECORD_STATUS(book_id, "not found");
+    }
+}
+
+void update_book_details(char* book_id) 
+{
+    struct book_node* result = get_matching_node(root_node, book_id);
+    
+    if (result != NULL) 
+    {
+        float new_price;
+        printf("Enter the new price for the book: ");
+        scanf("%f", &new_price);
+        result->book_record.book_price = new_price;
+        printf("Book price updated successfully.\n");
+        save_book_details(root_node);
+        PRINT_RECORD_STATUS(book_id, "updated");
+    } 
+    else 
+    {
+        PRINT_RECORD_STATUS(book_id, "not found");
+    }
+}
+
+struct book_node *find_minimum_node(struct book_node *temp_node)
+{
+    if (temp_node == NULL)
+    {
+        return NULL;
+    }
+    else if(temp_node->left_node != NULL)
+    {
+        return find_minimum_node(temp_node->left_node);
+    }
+    return temp_node;
+}
+
+struct book_node* delete_book_details(struct book_node *current, char* book_id)
+ {
+
+    if (current == NULL) 
+    {
+        return NULL;
+    }
+    if (strcmp(book_id, current->book_record.book_id) < 0) 
+    {
+        current->left_node = delete_book_details(current->left_node, book_id);
+    }
+    else if (strcmp(book_id, current->book_record.book_id) > 0) 
+    {
+        current->right_node = delete_book_details(current->right_node, book_id);
+    }
+    else if (strcmp(book_id, current->book_record.book_id) == 0)
+    {
+        if (current->left_node == NULL && current->right_node == NULL)
+        {
+            // printf("Deleting node %s", current->book_record.book_id);
+            if (current == root_node)
+            {
+                root_node = NULL;
+            }
+            free(current);
+            return NULL;
+        }
+        else if (current->left_node == NULL)
+        {
+            struct book_node *temp_node = current->right_node;
+            if (current == root_node)
+            {
+                root_node = temp_node;
+            }
+            free(current);
+            return temp_node;
+        }
+        else if (current->right_node == NULL)
+        {
+            struct book_node *temp_node = current->left_node;
+            if (current == root_node)
+            {
+                root_node = temp_node;
+            }
+            free(current);
+            return temp_node;
+        }
+        else
+        {
+            struct book_node *temp_node = find_minimum_node(current->right_node);
+            current->book_record = temp_node->book_record;
+            current->right_node = delete_book_details(current->right_node,  temp_node->book_record.book_id);
+        }
+    }
+    return current;
+}
+
+
+
+
+void show_menu() 
+{
+    int choice;
+    printf("\tNovelty Books\n");
+    printf("\t--------------\n");
+    printf("0. Exit\n1. Add a book details.\n2. Show all books.\n3. Update book details.\n4. Delete a book details.\n5. Search a book.\n");
+    char *book_id;
+    printf("Choose any option: ");
+    scanf("%d", &choice);
+
+    switch (choice) 
+    {
+        case 0: 
+            exit(0);
+            break;
+        case 1: 
+            add_book_details();
+            break;
+        case 2: 
+            show_all_books();
+            break;
+        case 3: 
+            operation = "update";
+            update_book_details(get_book_id(operation));
+            break;
+        case 4: 
+            operation = "delete";
+            book_id = get_book_id(operation);
+            delete_book_details(root_node, book_id);
+            save_book_details();
+            PRINT_RECORD_STATUS(book_id, "deleted");
+            break;
+        case 5: 
+            operation = "search";
+            search_book(get_book_id(operation));
+            break;
+        default: 
+            printf("Invalid choice.\n");
+            break;
+
+        
+    }
+}
+
+void main()
+{
+    load_binary_tree();
+    while(1)
+    {
+        show_menu();
+    }
+}
