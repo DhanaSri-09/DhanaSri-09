@@ -4,7 +4,7 @@
 int is_prime(char input_value[])
 {
 	int square_root;
-	int is_prime = 0;
+	int is_prime = -1;
 	int is_successful = 0;
 	int number = atoi(input_value);
 
