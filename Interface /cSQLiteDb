@@ -1,0 +1,103 @@
+//Class Sqlite database 
+
+
+import java.sql.*;
+import java.util.*;
+
+class cSQLiteDb implements iCRUDS
+{
+    private Connection conn;
+    private String  query;
+    private PreparedStatement statement;
+    private ResultSet queryResult;
+    public Scanner scanner = new Scanner(System.in);
+
+    public cSQLiteDb()
+    {
+        try 
+        {
+            Class.forName("org.sqlite.JDBC");           
+            conn = DriverManager.getConnection("jdbc:sqlite:D:\\Training\\Cprograms\\sqlite\\items.db");
+            System.out.println("Connected to the database.");
+        } 
+        catch (Exception e) 
+        {
+            e.printStackTrace();
+        }
+
+    }
+
+    public void insertItem(Dictionary<String, String> pItem) 
+    {
+        try{
+
+          
+            query = "INSERT INTO Item (ItemId, Description, UnitPrice, StockQty, SupplierId) VALUES (?, ?, ?, ?, ?)";
+            statement = conn.prepareStatement(query);
+            statement.setString(1, pItem.get("ItemId"));
+            statement.setString(2, pItem.get("Description"));
+            statement.setFloat(3, Float.parseFloat(pItem.get("UnitPrice")));
+            statement.setInt(4, Integer.parseInt(pItem.get("StockQty")));
+            statement.setString(5, pItem.get("SupplierId"));
+            int rowInserted = statement.executeUpdate();
+            System.out.println("Item Details insertion is");
+            if (rowInserted == 1) 
+            {
+                System.out.print(" successful.\n");
+            } 
+            else 
+            {
+                System.out.print(" failed.\n");
+            }
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+
+    public int getRowCount() throws SQLException 
+    {
+        
+        int rowCount = 0;
+        query = "SELECT COUNT(*) FROM Item";
+        statement = conn.prepareStatement(query);
+        queryResult = statement.executeQuery();
+        if (queryResult.next())
+        {
+            rowCount = queryResult.getInt(1);
+        }
+        return rowCount;
+    }
+
+
+    public String[][] loadItems() throws SQLException
+    {
+        int rowCount = getRowCount();
+            query = "SELECT * FROM Item";
+            statement = conn.prepareStatement(query);
+            queryResult = statement.executeQuery();
+
+            String[][] itemList = new String[rowCount][5];
+
+            int index = 0;
+            while (queryResult.next()) 
+            {
+                String itemId = queryResult.getString("ItemId");
+                String itemDescription = queryResult.getString("Description");
+                double unitPrice = queryResult.getDouble("UnitPrice");
+                int stockQty = queryResult.getInt("StockQty");
+                String supplierId = queryResult.getString("SupplierId");
+
+                itemList[index][0] = itemId;
+                itemList[index][1] = itemDescription;
+                itemList[index][2] = String.valueOf(unitPrice);
+                itemList[index][3] = String.valueOf(stockQty);
+                itemList[index][4] = supplierId;
+                index++;
+            }
+            return itemList;
+        
+    } 
+}
