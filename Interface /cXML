@@ -1,0 +1,105 @@
+import java.io.*;
+import javax.xml.parsers.*;
+import javax.xml.transform.*;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import org.w3c.dom.*;
+import org.xml.sax.SAXException;
+import java.util.*;
+
+class cXML implements iCRUDS
+{
+    Scanner scanner = new Scanner(System.in);
+    List<String[]> data = new ArrayList<>();
+    String dataFile = "Item.xml";
+    Document document;
+    Element root;
+
+    public cXML() 
+    {
+        try 
+        {
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            document = factory.newDocumentBuilder().parse(dataFile);
+            root = document.getDocumentElement();
+        } 
+        catch (ParserConfigurationException | SAXException | IOException e) 
+        {
+            e.printStackTrace();
+        }
+    }
+
+    public void saveRecords() 
+    {
+
+        try
+        {
+            DOMSource source = new DOMSource(root);
+            TransformerFactory transformerFactory = TransformerFactory.newInstance();
+            Transformer transformer = transformerFactory.newTransformer();
+            Result result = new StreamResult(new File(dataFile));
+            transformer.transform(source, result);
+        }
+        catch(Exception error)
+        {
+            System.out.println(error);
+        }
+    }
+
+    
+    public void insertItem(Dictionary<String, String> pItem) 
+    {
+        String[] itemRecord = new String[5];
+        itemRecord[0] = pItem.get("ItemId");
+        itemRecord[1] = pItem.get("Description");
+        itemRecord[2] = pItem.get("UnitPrice");
+        itemRecord[3] = pItem.get("StockQty");
+        itemRecord[4] = pItem.get("SupplierId");
+       
+        Element item = document.createElement("Item");
+        Element field;
+        field = document.createElement("ItemId");
+        field.setTextContent(itemRecord[0]);
+        item.appendChild(field);
+        field = document.createElement("Description");
+        field.setTextContent(itemRecord[0]);
+        item.appendChild(field);
+        field = document.createElement("UnitPrice");
+        field.setTextContent(itemRecord[0]);
+        item.appendChild(field);
+        field = document.createElement("StockQty");
+        field.setTextContent(itemRecord[0]);
+        item.appendChild(field);
+        field = document.createElement("SupplierId");
+        field.setTextContent(itemRecord[0]);
+        item.appendChild(field);
+        root.appendChild(item);
+        saveRecords();
+        System.out.println("Item added successfully with ID: " + pItem.get("ItemId"));
+    }
+
+    public String[][] loadItems() 
+    {
+    	int counter = 0;
+        NodeList itemList = root.getElementsByTagName("item");
+        String[][] items = new String[itemList.getLength()][5];
+
+            for (counter = 0; counter < itemList.getLength(); counter++) 
+            {
+                Element item = (Element) itemList.item(counter);
+                String itemId = item.getElementsByTagName("ItemId").item(0).getTextContent();
+                String description = item.getElementsByTagName("Description").item(0).getTextContent();
+                String unitPrice = item.getElementsByTagName("UnitPrice").item(0).getTextContent();
+                String stockQty = item.getElementsByTagName("StockQty").item(0).getTextContent();
+                String supplierId = item.getElementsByTagName("SupplierId").item(0).getTextContent();
+             
+                items[counter][0] = item.getElementsByTagName("ItemId").item(0).getTextContent();
+                items[counter][1] = item.getElementsByTagName("Description").item(0).getTextContent();
+                items[counter][2] = item.getElementsByTagName("UnitPrice").item(0).getTextContent();
+                items[counter][3] = item.getElementsByTagName("StockQty").item(0).getTextContent();
+                items[counter][4] = item.getElementsByTagName("SupplierId").item(0).getTextContent();
+            }
+        return items;
+    }
+
+}
