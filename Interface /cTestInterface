@@ -1,0 +1,81 @@
+// Class Test Interface
+import java.io.*;
+import java.util.Scanner;
+
+class cTestInterface 
+{
+    Scanner scanner = new Scanner(System.in);
+    public void showMenu() throws Exception
+    {
+        String className = readClassNameFromFile("className.cfg");
+        iCRUD oCRUDS = (iCRUD) Class.forName(className).newInstance();
+       
+        cUserInterface oUserInterface = new cUserInterface(); 
+         while (true)
+            {
+                System.out.println("\n===== Menu =====");
+                System.out.println("0. Exit");
+                System.out.println("1. Insert item");
+                System.out.println("2. Show all items");
+                System.out.print("\nEnter your choice: ");
+                int choice = scanner.nextInt();
+                scanner.nextLine();
+                
+                switch (choice) 
+                {
+                    case 0:
+                        System.out.println("Exiting program...\nConnection closed.");
+                        System.exit(0);
+                    case 1:
+                        oCRUDS.insertItem(oUserInterface.getItemDetails());
+                        break;
+                    case 2:
+                        String[][] itemList = oCRUDS.loadItems();
+                        oUserInterface.printDetails(itemList);
+                        break;
+                    default:
+                        System.out.println("Invalid choice. Please try again.");
+                }
+            }
+    }
+
+    public static void main(String[] args) 
+    {
+        cTestInterface testInterface = new cTestInterface();
+        try
+        {
+            testInterface.showMenu();
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        
+    }
+
+
+    private static String readClassNameFromFile(String filePath) 
+    {
+        try (BufferedReader reader = new BufferedReader(new FileReader("className.cfg"))) 
+        {
+            String className = reader.readLine();
+            if (className != null) 
+            {
+                return className.trim();
+            }
+            else 
+            {
+                System.out.println("Class name not found in configuration file.");
+                return null;
+            }
+        } 
+        catch (Exception e) 
+        {
+            System.out.println("Error reading file: " + "className.cfg");
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+
+}
