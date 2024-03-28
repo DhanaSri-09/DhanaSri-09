@@ -1,0 +1,8 @@
+// Interface iCRUD
+
+import java.util.Dictionary;
+
+interface iCRUD {
+    void insertItem(Dictionary<String, String> Item);
+    String[][] loadItems();
+}
